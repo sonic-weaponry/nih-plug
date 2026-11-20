@@ -1,0 +1,149 @@
+# Sonic Weaponry: Crisp's Mac build and its checks (ci-sw/README.md). Builds Crisp only, with the same nih-plug
+# commit and Rust nightly as the Crisp builds the Wook Bass Generators ship, then checks that the build shows hosts
+# exactly what the shipped Windows copy shows (class ID, parameters, state) and sounds the same (null test).
+# Crisp's own code is not changed.
+name: SW Crisp
+
+on:
+  push:
+    branches: ['sw/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RUSTUP_TOOLCHAIN: nightly-2024-11-27   # rustc dff3e7cc (2024-11-26), the compiler in both shipped Crisp binaries
+  VST3_SDK_TAG: v3.8.1_build_84          # interfaces for the test host only (MIT)
+  NULL_LIMIT_DBFS: '-100'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  macos:
+    name: macOS universal build and checks
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the test signal
+        run: cd ci-sw/signal && shasum -a 256 -c SHA256SUMS
+      - name: Set up Rust
+        run: |
+          rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal --target x86_64-apple-darwin --target aarch64-apple-darwin
+          rustc --version --verbose
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: macos-cargo-${{ env.RUSTUP_TOOLCHAIN }}-${{ hashFiles('Cargo.lock') }}
+      - name: Build Crisp (universal VST3)
+        run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.13
+          cargo xtask bundle-universal crisp --release
+          ls -la target/bundled
+          lipo -info target/bundled/Crisp.vst3/Contents/MacOS/Crisp
+          shasum -a 256 target/bundled/Crisp.vst3/Contents/MacOS/Crisp
+          codesign -dv target/bundled/Crisp.vst3 2>&1 | head -5 || true
+      - name: Build the test host
+        run: |
+          git clone -q --depth 1 --branch "$VST3_SDK_TAG" https://github.com/steinbergmedia/vst3_pluginterfaces.git ci-sw/vst3_check/sdk/pluginterfaces
+          cmake -S ci-sw/vst3_check -B ci-sw/vst3_check/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build ci-sw/vst3_check/build --config Release
+      - name: Checks (Apple Silicon)
+        if: ${{ !cancelled() }}
+        run: ci-sw/run_checks.sh "$PWD/ci-sw/vst3_check/build/vst3_check" "$PWD/target/bundled/Crisp.vst3" macos-arm64 "$PWD/ci-results"
+      - name: Checks (Intel, through Rosetta)
+        if: ${{ !cancelled() }}
+        run: ci-sw/run_checks.sh "$PWD/ci-sw/vst3_check/build/vst3_check" "$PWD/target/bundled/Crisp.vst3" macos-x86_64 "$PWD/ci-results" "arch -x86_64"
+      - name: Package the build
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p dist
+          ditto -c -k --keepParent target/bundled/Crisp.vst3 dist/Crisp-macos-universal-unsigned.zip
+          shasum -a 256 dist/*
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: crisp-macos
+          path: |
+            dist/
+            ci-results/
+          retention-days: 30
+
+  windows:
+    name: Windows build and checks
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the test signal
+        run: cd ci-sw/signal && sha256sum -c SHA256SUMS
+      - name: Set up Rust
+        run: |
+          rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
+          rustc --version --verbose
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: windows-cargo-${{ env.RUSTUP_TOOLCHAIN }}-${{ hashFiles('Cargo.lock') }}
+      - name: Build Crisp (VST3)
+        run: |
+          cargo xtask bundle crisp --release
+          ls -la target/bundled target/bundled/Crisp.vst3/Contents/x86_64-win
+          sha256sum target/bundled/Crisp.vst3/Contents/x86_64-win/Crisp.vst3
+      - name: Build the test host
+        run: |
+          git clone -q --depth 1 --branch "$VST3_SDK_TAG" https://github.com/steinbergmedia/vst3_pluginterfaces.git ci-sw/vst3_check/sdk/pluginterfaces
+          cmake -S ci-sw/vst3_check -B ci-sw/vst3_check/build
+          cmake --build ci-sw/vst3_check/build --config Release
+      - name: Checks
+        if: ${{ !cancelled() }}
+        run: ci-sw/run_checks.sh "$PWD/ci-sw/vst3_check/build/Release/vst3_check.exe" "$PWD/target/bundled/Crisp.vst3" windows-x64 "$PWD/ci-results"
+      - name: Package the build and the test host
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p dist
+          7z a -tzip dist/Crisp-windows-x64.zip ./target/bundled/Crisp.vst3 > /dev/null
+          cp ci-sw/vst3_check/build/Release/vst3_check.exe dist/
+          sha256sum dist/*
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: crisp-windows
+          path: |
+            dist/
+            ci-results/
+          retention-days: 30
+
+  compare:
+    name: Sound null test (macOS against Windows)
+    needs: [macos, windows]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Build the test host
+        run: |
+          git clone -q --depth 1 --branch "$VST3_SDK_TAG" https://github.com/steinbergmedia/vst3_pluginterfaces.git ci-sw/vst3_check/sdk/pluginterfaces
+          cmake -S ci-sw/vst3_check -B ci-sw/vst3_check/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build ci-sw/vst3_check/build --config Release
+      - name: Null tests
+        run: |
+          mkdir -p all
+          cp -R artifacts/crisp-macos/ci-results/* all/
+          cp -R artifacts/crisp-windows/ci-results/* all/
+          status=0
+          for label in macos-arm64 macos-x86_64; do
+            ci-sw/null_test.sh "$PWD/ci-sw/vst3_check/build/vst3_check" all "$label" windows-x64 "$NULL_LIMIT_DBFS" || status=1
+          done
+          ci-sw/null_test.sh "$PWD/ci-sw/vst3_check/build/vst3_check" all macos-x86_64 macos-arm64 "$NULL_LIMIT_DBFS" || status=1
+          exit $status

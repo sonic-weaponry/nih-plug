@@ -1,0 +1,14 @@
+{
+  "factory": {"vendor": "Robbert van der Helm", "url": "https://github.com/robbert-vdh/nih-plug/tree/master/plugins/crisp", "email": "mail@robbertvanderhelm.nl", "flags": 16},
+  "class": {"name": "Crisp", "category": "Audio Module Class", "cardinality": 2147483647, "subCategories": "Fx|Filter|Distortion|Stereo", "vendor": "Robbert van der Helm", "version": "0.1.0", "sdkVersion": "VST 3.6.14", "classFlags": 2},
+  "singleComponent": true,
+  "audioInputs": [{"name": "Input", "channels": 2, "type": 0, "flags": 1}],
+  "audioOutputs": [{"name": "Output", "channels": 2, "type": 0, "flags": 1}],
+  "eventInputs": 0,
+  "eventOutputs": 0,
+  "float32": true,
+  "float64": false,
+  "latencySamples": 0,
+  "tailSamples": 0,
+  "parameterCount": 11
+}

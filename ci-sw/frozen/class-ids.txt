@@ -1,0 +1,7 @@
+# Crisp's VST3 class, as hosts read it (vst3_check ids). Measured 2026-11-19 on the Windows copy the Wook Bass
+# Generators ship (sha256 b8467582...) and in the shipped Mac copy's binary. One line per OS:
+# <os> <canonical ID (VST3 SDK FUID::toString)> <the 16 raw bytes the factory hands the host> | <name> | <category>
+# Windows hands the bytes in COM GUID order, macOS and Linux as-is; both read as the same canonical ID.
+windows 4372697370506C7567696E527664482E 73 69 72 43 50 70 75 6C 67 69 6E 52 76 64 48 2E | Crisp | Audio Module Class
+macos 4372697370506C7567696E527664482E 43 72 69 73 70 50 6C 75 67 69 6E 52 76 64 48 2E | Crisp | Audio Module Class
+linux 4372697370506C7567696E527664482E 43 72 69 73 70 50 6C 75 67 69 6E 52 76 64 48 2E | Crisp | Audio Module Class

@@ -1,0 +1,1 @@
+{"version":"0.1.0","params":{"amount":{"f32":0.8},"mode":{"string":"crispy"},"nzhpff":{"f32":5.0},"nzhpfq":{"f32":0.70710677},"nzlpff":{"f32":22000.0},"nzlpfq":{"f32":0.70710677},"output":{"f32":1.0},"rmlpff":{"f32":22000.0},"rmlpfq":{"f32":0.70710677},"stereo":{"string":"stereo"},"wtonly":{"bool":false}},"fields":{"editor-state":"{\"scale_factor\":1.0}"}}
