@@ -25,7 +25,7 @@ process; the last line is always `RESULT <check> PASS|FAIL <detail>`.
 | `params` | Every parameter: ID, title, units, steps, flags, default, and the plain value and text at 0, 25, 50, 75 and 100 % | `frozen/parameters.json` |
 | `states` | Each state in `states/` loads into a fresh instance and saves back byte for byte; a fresh instance saves exactly `states/default.json` | `states/*.json` |
 | `render` | Loads a state, plays 1 s of silence then the test signal (`signal/`, pinned by `SHA256SUMS`) at 44.1 and 48 kHz, writes a 32-bit float WAV | |
-| `nulltest` | Subtracts two renders and reports the largest difference; the compare job requires every macOS render (both slices) to null against the Windows render below `NULL_LIMIT_DBFS` | |
+| `nulltest` | Subtracts two renders and reports the largest difference; the compare job requires every macOS render (both slices) to null against the Windows render below `NULL_LIMIT_DBFS` (set to -999, i.e. bit-identical: that is what every render measured on 2026-11-20) | |
 
 Crisp's noise generator starts from a fixed seed, so its output is deterministic and renders can be compared sample
 by sample across platforms.

@@ -25,7 +25,7 @@ permissions:
 env:
   RUSTUP_TOOLCHAIN: nightly-2024-11-27   # rustc dff3e7cc (2024-11-26), the compiler in both shipped Crisp binaries
   VST3_SDK_TAG: v3.8.1_build_84          # interfaces for the test host only (MIT)
-  NULL_LIMIT_DBFS: '-100'
+  NULL_LIMIT_DBFS: '-999'              # bit-identical: measured 2026-11-20, every macOS render equals the Windows one
 
 defaults:
   run:
