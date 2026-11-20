@@ -1,0 +1,3 @@
+# Keep the CI files byte-exact on every runner (Windows checkouts would otherwise turn LF into CRLF).
+* text eol=lf
+*.wav binary
