@@ -1,0 +1,18 @@
+Crisp for macOS (universal: Apple Silicon and Intel), VST3
+
+Crisp is made by Robbert van der Helm (https://github.com/robbert-vdh/nih-plug/tree/master/plugins/crisp), as part
+of his NIH-plug project. Copyright (C) 2022-2024 Robbert van der Helm. It is free software under the GNU General
+Public License, version 3 or later: see LICENSE.txt. It comes with ABSOLUTELY NO WARRANTY.
+
+This copy was built from Crisp's unchanged source by Sonic Weaponry, so that macOS opens it without security
+warnings: Sonic Weaponry signed it with its Apple Developer ID and had Apple notarize it. Nothing about the plugin was
+changed. Robbert van der Helm did not make, sign or endorse this build; questions about it go to Sonic Weaponry, not
+to him.
+
+The exact source of this build (Crisp, the NIH-plug framework and everything used to build and sign it):
+  @SOURCE_URL@
+  commit @COMMIT@
+Built with Rust @RUST_TOOLCHAIN@ (cargo xtask bundle-universal crisp --release).
+
+Crisp uses vst3-sys (GPL-3.0) for the VST3 interface, and other Rust libraries under the MIT, Apache-2.0 and ISC
+licenses, all listed with their sources in the Cargo.lock file of the source above.

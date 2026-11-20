@@ -1,0 +1,15 @@
+Crisp for Mac (Apple Silicon and Intel), VST3
+
+1. Quit your DAW (FL Studio, Ableton Live ...).
+2. Copy Crisp.vst3 into one of these folders, replacing any older Crisp.vst3 there:
+     /Library/Audio/Plug-Ins/VST3          (for every user on this Mac)
+     ~/Library/Audio/Plug-Ins/VST3         (just for you)
+   In Finder: Go > Go to Folder..., paste the path, press Return.
+3. Open your DAW and let it rescan its plugins. In FL Studio: Options > Manage plugins > Find more plugins.
+
+This copy is signed by Sonic Weaponry and notarized by Apple, so you don't need to change any Gatekeeper or
+security settings.
+
+Crisp is made by Robbert van der Helm and is free software (GPL-3.0): see LICENSE.txt and CREDITS and SOURCE.txt.
+
+The Sonic Weaponry Team

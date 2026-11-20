@@ -35,3 +35,22 @@ ship (sha256 b8467582...): every check passes on it, and two runs of its renders
 
 `make_test_signal.py` makes the test signal (log sweep, a 55 Hz saw stepped from -30 to 0 dBFS, a noise burst,
 impulses); `run_checks.sh` runs every check on one bundle; `null_test.sh` compares two sets of renders.
+
+## Signing
+Adapted from our Wolf Shaper fix. Crisp ships as a bundle in a zip (the packs tell users to copy the .vst3), so only
+a Developer ID Application certificate is used; there is no installer.
+
+- **Every push (rehearsal):** `signing/make_test_identity.sh` makes a throwaway self-signed identity on the runner,
+  `signing/keychain.sh` puts it in a temporary keychain, `signing/sign_bundle.sh` signs a copy of the build (LICENSE.txt
+  and "CREDITS and SOURCE.txt" go into Contents/Resources first, so the seal covers them; hardened runtime; Apple's
+  timestamp), `signing/macho_same_code.py` proves the signed program has exactly the unsigned build's code and data
+  in both slices, `signing/check_signed_bundle.sh rehearsal` checks the signature, the plugin checks run again on the
+  signed copy and its renders must be bit-identical, and `signing/make_release_zip.sh` packs and re-checks the zip.
+  The keychain is deleted at the end; nothing from the rehearsal is uploaded.
+- **By hand (`release: sign`), job `macos-release`:** runs only on sw/ branches after every other job is green, in the
+  `mac-release` environment (its secrets can only be used by sw/* branches and v* tags). It takes the exact build the
+  macos job checked (its sha256 must match), signs it with "Developer ID Application: SONIC WEAPONRY LLC", checks the
+  signature, sends it to Apple's notary service with the App Store Connect API key (`signing/notarize_bundle.sh`),
+  staples Apple's ticket to the bundle, checks Apple's log (accepted, no issues, the exact zip, both slices), runs every
+  plugin check on both slices of the signed bundle (renders bit-identical to the checked build), and uploads the zip.
+  The keychain and the API key file are deleted at the end, also after a failure.
